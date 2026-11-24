@@ -42,7 +42,7 @@ The daily checks (completeness against 46/48/50 periods, invalid periods, ranges
   the same rows, so the gap is in the source. Wind is 97.8% complete overall; missing periods are excluded, not imputed.
 - **2,874 duplicate revisions** of wind data (mostly March to April 2026); the latest publication is kept.
 - **N2EX price** is missing whole days (29 to 30 June 2025), so the complete APX index is used.
-- **A real price shift:** the drift check flags APX prices, which averaged GBP 206.5/MWh in November 2026 against
+- **A real price shift:** the drift check flags APX prices, which averaged GBP 201.1/MWh in 1 to 23 November 2026 against
   GBP 75.9/MWh a year earlier. Comparing with the same weeks last year stops seasonal temperature change from
   raising false alarms.
 

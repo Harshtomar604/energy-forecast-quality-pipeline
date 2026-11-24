@@ -13,7 +13,7 @@ MODEL_LABELS = {
     "gbm_forecast_weather": "Gradient boosting (forecast weather)",
     "gbm_actual_weather": "Gradient boosting (actual weather, upper bound)",
 }
-BASELINES = {"wind": "persistence: the 09:30 value the day before", "demand": "the same half-hour one week earlier"}
+BASELINES = {"wind": "persistence (the 09:30 value from the day before)", "demand": "the same half-hour one week earlier"}
 STATUS_ICON = {"PASS": "✅ PASS", "WARN": "⚠️ WARN", "FAIL": "❌ FAIL"}
 ELEXON_SERIES = ["wind_onshore", "wind_offshore", "demand", "price_apx", "price_n2ex"]
 
@@ -35,7 +35,7 @@ meta = load_meta()
 st.title("GB power data: automated quality checks and day-ahead forecasts")
 st.caption(
     f"Elexon BMRS and Open-Meteo data from {meta['data_first']} to {meta['data_last']}. "
-    f"Artefacts generated {meta['generated_at']} (UTC)."
+    f"Last refreshed {pd.Timestamp(meta['generated_at']):%d %b %Y, %H:%M} UTC."
 )
 
 tab_b, tab_fc, tab_q, tab_p, tab_m = st.tabs(
@@ -132,10 +132,15 @@ with tab_q:
     c3.metric("FAIL", int(counts.get("FAIL", 0)))
 
     view = card.assign(status=card["status"].map(STATUS_ICON), completeness=(card["completeness"] * 100).round(2))
+    view = view.rename(columns={
+        "series": "Series", "rows": "Rows", "expected": "Expected", "missing": "Missing",
+        "completeness": "Completeness (%)", "gap_days": "Days with gaps", "invalid_periods": "Invalid periods",
+        "out_of_range": "Out of range or null", "duplicates_resolved": "Duplicate keys resolved",
+        "drift_z": "Drift z", "status": "Status"})
     st.dataframe(view, hide_index=True, width="stretch", column_config={
-        "completeness": st.column_config.NumberColumn("completeness (%)"),
-        "duplicates_resolved": st.column_config.NumberColumn("duplicate keys resolved"),
-        "drift_z": st.column_config.NumberColumn("drift z", help="Last 7 days' mean vs the previous 90 days, in standard deviations."),
+        "Drift z": st.column_config.NumberColumn(
+            "Drift z", help="Mean of the last 7 days compared with the same weeks a year earlier, "
+                            "in standard deviations."),
     })
     st.caption("FAIL: completeness below 98% or invalid settlement periods. "
                "WARN: completeness below 99.9%, out-of-range or null values, or |drift z| above 3.")
@@ -146,12 +151,12 @@ with tab_q:
     heat = alt.Chart(daily).mark_rect().encode(
         x=alt.X("day:T", title=None),
         y=alt.Y("series:N", title=None, sort=ELEXON_SERIES),
-        color=alt.Color("completeness:Q", title="share of periods present",
+        color=alt.Color("completeness:Q", title="Share of periods present",
                         scale=alt.Scale(domain=[0, 1], range=["#c62828", "#f9a825", "#e8f5e9"])),
         tooltip=[alt.Tooltip("day:T", format="%d %b %Y"), "series:N", "present:Q", "expected:Q"],
     ).properties(height=200)
     st.altair_chart(heat, width="stretch")
-    st.caption("Expected periods per day are 48, or 46 and 50 on the spring and autumn clock-change days. "
+    st.caption("Each day should have 48 settlement periods: 46 on the spring clock-change day and 50 in autumn. "
                "All weather series are complete and are not shown.")
 
 with tab_p:
@@ -191,8 +196,8 @@ with tab_m:
 2. Quality checks per series: completeness (46/48/50 periods per day), invalid periods, ranges, nulls, drift.
 3. Day-ahead forecasts with gradient boosting, tested on the last 12 months with rolling-origin validation
    against naive baselines; half-hours missing in the source are excluded, not imputed.
-
-4. Daily briefing: an LLM summarises the latest day from facts computed in code; every number it writes is
+4. Price research: whether the forecast change in wind explains the direction of the next day's price.
+5. Daily briefing: an LLM summarises the latest day from facts computed in code; every number it writes is
    checked against those facts before publication.
 
 **Limitations**
@@ -200,6 +205,7 @@ with tab_m:
   match the information available at a real market gate closure.
 - Demand is transmission-level outturn, which falls when embedded solar generates; solar is not yet a feature,
   and the model only knows bank holidays, not the whole Christmas period.
-- The drift check compares with the previous 90 days, so seasonal change can look like drift.
+- The drift check compares with the same weeks a year earlier, so a series needs a year of history before
+  seasonal change stops looking like drift.
 - Six weather points are a coarse proxy for GB-wide wind and temperature.
 """)
