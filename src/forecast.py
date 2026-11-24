@@ -46,7 +46,7 @@ def build_features(df):
     df["settlement_date"] = pd.to_datetime(df["settlement_date"])
     years = range(df["settlement_date"].dt.year.min(), df["settlement_date"].dt.year.max() + 1)
     bank_holidays = pd.to_datetime(list(holidays.UK(subdiv="England", years=years)))
-    df["dow"] = df["settlement_date"].dt.dayofweek
+    df["dow"] = df["settlement_date"].dt.day_of_week
     df["month"] = df["settlement_date"].dt.month
     df["holiday"] = df["settlement_date"].isin(bank_holidays).astype(int)
     for src in ("fc", "act"):

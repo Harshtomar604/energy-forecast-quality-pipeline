@@ -5,7 +5,7 @@ This project ingests two years of half-hourly Elexon and Open-Meteo data into Du
 forecasts wind generation and national demand a day ahead, tests whether the wind forecast explains price moves,
 and publishes an LLM-written daily briefing whose every number is checked in code.
 
-**Live app:** _link added after deployment_
+**Live app:** https://energy-forecast-quality-pipeline-ht.streamlit.app/ (data refreshed daily by GitHub Actions)
 
 ## Results
 

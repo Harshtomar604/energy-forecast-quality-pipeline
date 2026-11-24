@@ -27,7 +27,8 @@ SYSTEM_PROMPT = """You write a short daily briefing on Great Britain's power dat
 Rules:
 - Use only the facts in the JSON you are given. Do not add outside knowledge, causes or forecasts.
 - Every number you write must appear in the JSON. Copy numbers exactly; do not round, convert units or calculate new ones.
-- Keep units as given (MW, GBP/MWh, %).
+- Keep units as given (MW, GBP/MWh, %). Write percentages with no space (16.0%) and use British English.
+- For a negative change, drop the minus sign and say lower or fell (write "14.7% lower", not "-14.7% lower").
 - 120 to 180 words, plain prose, no headings, no bullet points.
 - Cover: wind, demand, price, how the day-ahead forecasts performed, and any data-quality issues."""
 
