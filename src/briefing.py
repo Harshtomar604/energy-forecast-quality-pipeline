@@ -14,6 +14,8 @@ ENV_PATH = Path(".env")
 ART_PATH = Path("artefacts/briefing.json")
 OUT_PATH = Path("briefing_output.txt")
 LOOKBACK_DAYS = 7
+MIN_WORDS = 80
+MIN_NUMBERS = 5
 DEFAULT_BASE_URL = "https://api.groq.com/openai/v1"
 MONTHS = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*"
 DATE_PATTERNS = [
@@ -164,35 +166,51 @@ def call_llm(messages):
                       json={"model": model, "messages": messages, "temperature": 0.2}, timeout=90)
     if not r.ok:
         raise RuntimeError(f"HTTP {r.status_code} for model {model!r}: {r.text[:300]}")
-    text = r.json()["choices"][0]["message"]["content"]
-    return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip(), model
+    choice = r.json()["choices"][0]
+    text = choice["message"].get("content") or ""
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+    return text, model, choice.get("finish_reason")
+
+
+def problems(text, facts):
+    checked, unsupported = validate(text, facts)
+    issues = []
+    if len(text.split()) < MIN_WORDS:
+        issues.append(f"too short ({len(text.split())} words, minimum {MIN_WORDS})")
+    if checked < MIN_NUMBERS:
+        issues.append(f"too few numbers ({checked}, minimum {MIN_NUMBERS})")
+    if unsupported:
+        issues.append(f"numbers not in the JSON: {unsupported}")
+    return issues, checked, unsupported
 
 
 def generate(facts):
     if not os.environ.get("LLM_API_KEY"):
-        return template_briefing(facts), "template", "skipped: LLM_API_KEY not set", [], 0
+        return template_briefing(facts), "template", "skipped: LLM_API_KEY not set"
     messages = [{"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": json.dumps(facts, indent=2)}]
-    model, unsupported, checked = None, [], 0
+    issues = []
     for attempt in (1, 2):
         try:
-            text, model = call_llm(messages)
+            text, model, finish = call_llm(messages)
         except Exception as e:
-            return template_briefing(facts), "template", f"LLM error: {type(e).__name__}: {e}"[:500], [], 0
-        checked, unsupported = validate(text, facts)
-        if not unsupported:
-            return text, model, f"verified on attempt {attempt}", [], checked
-        messages += [{"role": "assistant", "content": text},
-                     {"role": "user", "content": f"These numbers are not in the JSON: {unsupported}. "
-                                                 "Rewrite the briefing using only numbers from the JSON."}]
-    return template_briefing(facts), "template", f"LLM output rejected: unsupported numbers {unsupported}", unsupported, checked
+            return template_briefing(facts), "template", f"LLM error: {type(e).__name__}: {e}"[:500]
+        issues, _, _ = problems(text, facts)
+        if not issues:
+            return text, model, f"verified on attempt {attempt}"
+        if finish and finish != "stop":
+            issues.append(f"finish_reason={finish}")
+        messages += [{"role": "assistant", "content": text or "(empty reply)"},
+                     {"role": "user", "content": "Your briefing was rejected: " + "; ".join(issues) +
+                                                 ". Rewrite it following every rule, using only numbers from the JSON."}]
+    return template_briefing(facts), "template", "LLM output rejected: " + "; ".join(issues)
 
 
 def main():
     load_env()
     con = duckdb.connect(str(DB_PATH))
     facts = build_facts(con)
-    text, model, status, unsupported, checked = generate(facts)
+    text, model, status = generate(facts)
     template_checked, template_bad = validate(text, facts)
     generated_at = datetime.now(timezone.utc)
     record = {"date": facts["date"], "generated_at": generated_at.isoformat(timespec="seconds"),

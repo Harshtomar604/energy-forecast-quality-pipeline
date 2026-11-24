@@ -38,3 +38,35 @@ def test_gw_conversion_is_accepted():
 
 def test_strip_dates_keeps_other_text():
     assert "MW" in strip_dates("23 Nov 2026 wind 5 MW")
+
+
+def _facts():
+    return {"date": "2026-11-23", "lookback_days": 7, "periods_expected": 48, "wind_mean_mw": 6692,
+            "wind_min_mw": 4031, "wind_max_mw": 11466, "wind_mean_prev7_mw": 7963, "demand_mean_mw": 35034,
+            "demand_peak_mw": 43134, "price_mean_gbp_mwh": 195.9, "price_min_gbp_mwh": 154.6,
+            "price_max_gbp_mwh": 251.2, "wind_forecast_mae_mw": 1034, "wind_baseline_mae_mw": 6304,
+            "demand_forecast_mae_mw": 1117, "demand_baseline_mae_mw": 1603, "quality_series_checked": 29,
+            "quality_pass": 25, "quality_warn": 2, "quality_fail": 2}
+
+
+def test_empty_llm_reply_falls_back_to_template(monkeypatch):
+    import briefing
+    monkeypatch.setenv("LLM_API_KEY", "test")
+    calls = []
+
+    def fake(messages):
+        calls.append(1)
+        return "", "fake-model", "stop"
+
+    monkeypatch.setattr(briefing, "call_llm", fake)
+    text, model, status = briefing.generate(_facts())
+    assert len(calls) == 2
+    assert model == "template"
+    assert "too short" in status
+    assert "6,692 MW" in text
+
+
+def test_short_reply_is_rejected():
+    from briefing import problems
+    issues, _, _ = problems("Wind averaged 6,692 MW.", _facts())
+    assert any("too short" in i for i in issues)

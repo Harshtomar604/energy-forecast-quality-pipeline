@@ -47,7 +47,9 @@ with tab_b:
         b = json.loads(path.read_text())
         st.subheader(f"Briefing for {b['date']}")
         st.write(b["text"])
-        if b["model"] == "template":
+        if not b["text"].strip():
+            st.warning("The briefing for this date is empty; it will be regenerated on the next daily run.")
+        elif b["model"] == "template":
             st.info(f"Template briefing written by code, not an LLM ({b['status']}). "
                     f"{b['numbers_checked']} numbers checked against the source tables.")
         elif not b["unsupported_numbers"]:
