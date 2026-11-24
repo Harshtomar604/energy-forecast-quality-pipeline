@@ -1,0 +1,70 @@
+name: daily-pipeline
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Unit tests
+        run: pytest -q
+
+      - name: Restore DuckDB from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/energy.duckdb
+          key: energy-db-${{ github.run_id }}
+          restore-keys: energy-db-
+
+      - name: Backfill history if no cached database
+        run: |
+          if [ ! -f data/energy.duckdb ]; then
+            python src/ingest.py --start 2024-11-18
+          fi
+
+      - name: Run pipeline (ingest, quality, forecast, briefing, export)
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL || 'https://api.groq.com/openai/v1' }}
+        run: python run_pipeline.py
+
+      - name: Save DuckDB to cache
+        if: always() && hashFiles('data/energy.duckdb') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/energy.duckdb
+          key: energy-db-${{ github.run_id }}
+
+      - name: Commit refreshed artefacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add artefacts
+          if git diff --cached --quiet; then
+            echo "artefacts unchanged"
+          else
+            git commit -m "Daily artefacts $(date -u +%F)"
+            git push
+          fi

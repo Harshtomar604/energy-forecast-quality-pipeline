@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-23",
+  "generated_at": "2026-11-24T01:18:22+00:00",
+  "model": "openai/gpt-oss-120b",
+  "status": "verified on attempt 1",
+  "numbers_checked": 24,
+  "unsupported_numbers": [],
+  "text": "On 2026-11-23 the average wind output was 6797\u202fMW, ranging from a low of 4031\u202fMW to a high of 11507\u202fMW, which is -14.7\u202f% lower than the seven\u2011day average of 7963\u202fMW. System demand averaged 35034\u202fMW with a peak of 43134\u202fMW, up 7.1\u202f% on the previous week\u2019s mean of 32701\u202fMW. The average market price was \u00a3195.9/MWh, moving between \u00a3154.6/MWh and \u00a3251.2/MWh, a 5.2\u202f% increase from the prior week\u2019s \u00a3186.1/MWh. Day\u2011ahead wind forecasts showed a mean absolute error of 1025\u202fMW, far better than the baseline error of 6199\u202fMW. Demand forecasts posted a MAE of 1117\u202fMW versus a baseline MAE of 1603\u202fMW and a MAPE of 3.07\u202f%. Data quality checks covered 29 series, with 25 passing, 2 warnings and 2 failures. Issues flagged include FAIL for wind_onshore and wind_offshore, and WARN for price_apx and price_n2ex; both wind_onshore and wind_offshore each missed 2 periods.",
+  "facts": {
+    "date": "2026-11-23",
+    "lookback_days": 7,
+    "periods_expected": 48,
+    "wind_periods_present": 46,
+    "wind_mean_mw": 6797,
+    "wind_min_mw": 4031,
+    "wind_max_mw": 11507,
+    "wind_mean_prev7_mw": 7963,
+    "wind_change_vs_prev7_pct": -14.7,
+    "demand_mean_mw": 35034,
+    "demand_peak_mw": 43134,
+    "demand_mean_prev7_mw": 32701,
+    "demand_change_vs_prev7_pct": 7.1,
+    "price_mean_gbp_mwh": 195.9,
+    "price_min_gbp_mwh": 154.6,
+    "price_max_gbp_mwh": 251.2,
+    "price_mean_prev7_gbp_mwh": 186.1,
+    "price_change_vs_prev7_pct": 5.2,
+    "wind_forecast_mae_mw": 1025,
+    "wind_baseline_mae_mw": 6199,
+    "demand_forecast_mae_mw": 1117,
+    "demand_baseline_mae_mw": 1603,
+    "demand_forecast_mape_pct": 3.07,
+    "quality_series_checked": 29,
+    "quality_pass": 25,
+    "quality_warn": 2,
+    "quality_fail": 2,
+    "quality_issues": [
+      "wind_onshore: FAIL",
+      "wind_offshore: FAIL",
+      "price_apx: WARN",
+      "price_n2ex: WARN"
+    ],
+    "missing_periods_on_date": {
+      "wind_offshore": 2,
+      "wind_onshore": 2
+    },
+    "missing_wind_offshore": 2,
+    "missing_wind_onshore": 2
+  }
+}

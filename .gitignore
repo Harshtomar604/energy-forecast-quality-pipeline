@@ -1,0 +1,21 @@
+# data: never commit
+data/
+*.duckdb
+*.duckdb.wal
+*.csv
+*.parquet
+*_output.txt
+!artefacts/*.parquet
+
+# python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# secrets
+.env
+.streamlit/secrets.toml
+
+# OS / editor
+Thumbs.db
+.vscode/
