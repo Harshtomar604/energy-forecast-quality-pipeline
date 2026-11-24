@@ -65,7 +65,7 @@ day-ahead auction price, which this dataset does not include.
    MW to GW conversion. Any unmatched number triggers one retry with the list of offenders; if that fails too,
    a template briefing written by code is published instead and the failure is recorded.
 
-Numbers written as words are not yet checked.
+The check confirms that every number in the text exists in the facts, not that it is attached to the right quantity, so a misattributed number can still pass; the prompt therefore requires digits and exact series names.
 
 ## Pipeline
 

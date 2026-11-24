@@ -31,6 +31,8 @@ Rules:
 - Every number you write must appear in the JSON. Copy numbers exactly; do not round, convert units or calculate new ones.
 - Keep units as given (MW, GBP/MWh, %). Write percentages with no space (16.0%) and use British English.
 - For a negative change, drop the minus sign and say lower or fell (write "14.7% lower", not "-14.7% lower").
+- Write every number as digits, never as words (write "2 periods", not "two periods").
+- Attach each number only to the quantity it describes in the JSON; for missing periods, name the series exactly.
 - 120 to 180 words, plain prose, no headings, no bullet points.
 - Cover: wind, demand, price, how the day-ahead forecasts performed, and any data-quality issues."""
 
