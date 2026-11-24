@@ -1,21 +1,21 @@
 {
   "date": "2026-11-23",
-  "generated_at": "2026-11-24T01:47:03+00:00",
+  "generated_at": "2026-11-24T17:50:54+00:00",
   "model": "openai/gpt-oss-120b",
-  "status": "verified on attempt 2",
-  "numbers_checked": 24,
+  "status": "verified on attempt 1",
+  "numbers_checked": 23,
   "unsupported_numbers": [],
-  "text": "On 23\u202fNovember\u202f2026 the wind fleet generated an average of 6892\u202fMW, with a minimum of 4031\u202fMW and a maximum of 11507\u202fMW. Over the previous seven\u2011day window the mean was 7963\u202fMW, so output was 13.4% lower. Forty\u2011seven wind periods were recorded out of the 48 periods expected, with one missing period each for wind_offshore and wind_onshore. System demand averaged 35034\u202fMW and peaked at 43134\u202fMW, 7.1% higher than the prior week\u2019s mean of 32701\u202fMW. The average electricity price was \u00a3195.9/\u200bMWh, ranging from \u00a3154.6/\u200bMWh to \u00a3251.2/\u200bMWh, which is 5.2% higher than the previous seven\u2011day mean of \u00a3186.1/\u200bMWh. Day\u2011ahead forecasts performed well: wind forecast MAE was 1231\u202fMW versus a baseline MAE of 6104\u202fMW, and demand forecast MAE was 1072\u202fMW against a baseline of 1603\u202fMW, with a demand MAPE of 2.94%. Data\u2011quality checks covered 29 series, with 25 passing, 2 warnings and 2 failures; the failures were wind_onshore and wind_offshore, and the warnings related to price_apx and price_n2ex.",
+  "text": "On 2026-11-23 the wind fleet generated a mean of 6988\u202fMW, ranging from a minimum of 4031\u202fMW to a maximum of 11507\u202fMW. Compared with the previous seven\u2011day average of 7963\u202fMW, wind output was 12.2% lower. The day\u2011ahead wind forecast showed a mean absolute error of 1208\u202fMW, well below the baseline error of 6008\u202fMW.\n\nSystem demand averaged 35034\u202fMW with a peak of 43134\u202fMW, higher than the prior week\u2019s mean of 32701\u202fMW by 7.1%. The demand forecast achieved a mean absolute error of 1072\u202fMW versus a baseline of 1603\u202fMW and a mean absolute percentage error of 2.94%.\n\nElectricity price averaged \u00a3195.9/MWh, between a low of \u00a3154.6/MWh and a high of \u00a3251.2/MWh. The weekly mean of \u00a3186.1/MWh rose by 5.2% on the previous period.\n\nData quality checks covered 29 series, with 25 passing, 2 warning and 2 failing. Issues were recorded for wind_onshore (FAIL), wind_offshore (FAIL), price_apx (WARN) and price_n2ex (WARN).",
   "facts": {
     "date": "2026-11-23",
     "lookback_days": 7,
     "periods_expected": 48,
-    "wind_periods_present": 47,
-    "wind_mean_mw": 6892,
+    "wind_periods_present": 48,
+    "wind_mean_mw": 6988,
     "wind_min_mw": 4031,
     "wind_max_mw": 11507,
     "wind_mean_prev7_mw": 7963,
-    "wind_change_vs_prev7_pct": -13.4,
+    "wind_change_vs_prev7_pct": -12.2,
     "demand_mean_mw": 35034,
     "demand_peak_mw": 43134,
     "demand_mean_prev7_mw": 32701,
@@ -25,8 +25,8 @@
     "price_max_gbp_mwh": 251.2,
     "price_mean_prev7_gbp_mwh": 186.1,
     "price_change_vs_prev7_pct": 5.2,
-    "wind_forecast_mae_mw": 1231,
-    "wind_baseline_mae_mw": 6104,
+    "wind_forecast_mae_mw": 1208,
+    "wind_baseline_mae_mw": 6008,
     "demand_forecast_mae_mw": 1072,
     "demand_baseline_mae_mw": 1603,
     "demand_forecast_mape_pct": 2.94,
@@ -40,11 +40,6 @@
       "price_apx: WARN",
       "price_n2ex: WARN"
     ],
-    "missing_periods_on_date": {
-      "wind_offshore": 1,
-      "wind_onshore": 1
-    },
-    "missing_wind_offshore": 1,
-    "missing_wind_onshore": 1
+    "missing_periods_on_date": {}
   }
 }
