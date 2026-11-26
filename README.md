@@ -11,6 +11,7 @@ and publishes an LLM-written daily briefing whose every number is checked in cod
 
 Rolling-origin validation: 12 monthly test folds (Dec 2025 to Nov 2026), each forecast by a model trained only on
 earlier data. Inputs are the **day-ahead** weather forecast (what was known the day before), not actual weather.
+Figures below are from the run of 24 November 2026; the app shows the latest daily run.
 
 **Wind generation**
 
@@ -38,12 +39,12 @@ The daily checks (completeness against 46/48/50 periods, invalid periods, ranges
 
 - **An off-by-one in the API:** time-filtered Elexon endpoints treat `to` as inclusive (337 rows instead of 336),
   so every table is keyed on settlement date and period instead of timestamps.
-- **A five-week hole in wind data** (19 May to 25 June 2026): about a third of half-hours missing. Re-fetching returned
+- **A five-week hole in wind data** (19 May to 25 June 2026): about 39% of half-hours missing. Re-fetching returned
   the same rows, so the gap is in the source. Wind is 97.8% complete overall; missing periods are excluded, not imputed.
 - **2,874 duplicate revisions** of wind data (mostly March to April 2026); the latest publication is kept.
 - **N2EX price** is missing whole days (29 to 30 June 2025), so the complete APX index is used.
 - **A real price shift:** the drift check flags APX prices, which averaged GBP 201.1/MWh in 1 to 23 November 2026 against
-  GBP 75.9/MWh a year earlier. Comparing with the same weeks last year stops seasonal temperature change from
+  GBP 75.5/MWh a year earlier. Comparing with the same weeks last year stops seasonal temperature change from
   raising false alarms.
 
 ## Price research (not a trading strategy)
@@ -80,10 +81,11 @@ Open-Meteo APIs ─────┘   (keyed,               (scorecard)    (rolli
 - **Ingestion** is safe to re-run: primary keys plus `INSERT OR REPLACE`, with an `ingest_log` of rows received,
   duplicates and rows written per chunk. Each source has its own window (Elexon to yesterday, the weather archive
   six days behind).
-- **GitHub Actions** (`.github/workflows/daily.yml`) runs the tests and the pipeline every morning, caches the DuckDB
-  file between runs, and commits refreshed artefacts; Streamlit Cloud redeploys from them.
+- **GitHub Actions** (`.github/workflows/daily.yml`) runs the tests and the pipeline once a day (scheduled for
+  06:17 UTC; GitHub can start scheduled runs hours late), caches the DuckDB file between runs, and commits refreshed
+  artefacts; Streamlit Cloud redeploys from them.
 - **The app** reads only `artefacts/` (about 200 KB of Parquet and JSON), so it starts instantly without the database.
-- **Tests:** 26 pytest tests cover clock-change days, completeness, drift, ingest windows, the number checker and the
+- **Tests:** 29 pytest tests cover clock-change days, completeness, drift, ingest windows, the number checker and the
   backtest statistics.
 
 ## Data and licences

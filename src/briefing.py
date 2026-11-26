@@ -140,17 +140,26 @@ def build_facts(con):
     return facts
 
 
+def num(x):
+    """Format a fact for the template; a missing fact (None) is written as 'n/a' instead of crashing."""
+    if x is None:
+        return "n/a"
+    return f"{x:,}" if isinstance(x, int) else str(x)
+
+
 def template_briefing(f):
-    parts = [f"On {f['date']}, wind generation averaged {f['wind_mean_mw']:,} MW "
-             f"(range {f['wind_min_mw']:,} to {f['wind_max_mw']:,} MW), against {f['wind_mean_prev7_mw']:,} MW "
+    parts = [f"On {f['date']}, wind generation averaged {num(f['wind_mean_mw'])} MW "
+             f"(range {num(f['wind_min_mw'])} to {num(f['wind_max_mw'])} MW), against {num(f['wind_mean_prev7_mw'])} MW "
              f"over the previous {f['lookback_days']} days."]
-    parts.append(f"Demand averaged {f['demand_mean_mw']:,} MW with a peak of {f['demand_peak_mw']:,} MW.")
-    parts.append(f"The APX market index averaged {f['price_mean_gbp_mwh']} GBP/MWh "
-                 f"(range {f['price_min_gbp_mwh']} to {f['price_max_gbp_mwh']}).")
+    parts.append(f"Demand averaged {num(f['demand_mean_mw'])} MW with a peak of {num(f['demand_peak_mw'])} MW.")
+    parts.append(f"The APX market index averaged {num(f['price_mean_gbp_mwh'])} GBP/MWh "
+                 f"(range {num(f['price_min_gbp_mwh'])} to {num(f['price_max_gbp_mwh'])}).")
     if f["wind_forecast_mae_mw"] is not None:
-        parts.append(f"The day-ahead wind model's MAE was {f['wind_forecast_mae_mw']:,} MW "
-                     f"against {f['wind_baseline_mae_mw']:,} MW for persistence; the demand model's MAE was "
-                     f"{f['demand_forecast_mae_mw']:,} MW against {f['demand_baseline_mae_mw']:,} MW for last week's value.")
+        parts.append(f"The day-ahead wind model's MAE was {num(f['wind_forecast_mae_mw'])} MW "
+                     f"against {num(f['wind_baseline_mae_mw'])} MW for persistence.")
+    if f["demand_forecast_mae_mw"] is not None:
+        parts.append(f"The demand model's MAE was {num(f['demand_forecast_mae_mw'])} MW "
+                     f"against {num(f['demand_baseline_mae_mw'])} MW for last week's value.")
     parts.append(f"Data quality: {f['quality_pass']} of {f['quality_series_checked']} series passed, "
                  f"{f['quality_warn']} warned and {f['quality_fail']} failed.")
     return " ".join(parts)

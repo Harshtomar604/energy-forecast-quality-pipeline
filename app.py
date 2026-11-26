@@ -14,6 +14,13 @@ MODEL_LABELS = {
     "gbm_actual_weather": "Gradient boosting (actual weather, upper bound)",
 }
 BASELINES = {"wind": "persistence (the 09:30 value from the day before)", "demand": "the same half-hour one week earlier"}
+# One colour per series in every chart, readable on both the light and the dark theme.
+SERIES_COLORS = {
+    "Actual": "#00a888",
+    MODEL_LABELS["baseline"]: "#8c8c8c",
+    MODEL_LABELS["gbm_forecast_weather"]: "#338ced",
+    MODEL_LABELS["gbm_actual_weather"]: "#e76624",
+}
 STATUS_ICON = {"PASS": "✅ PASS", "WARN": "⚠️ WARN", "FAIL": "❌ FAIL"}
 ELEXON_SERIES = ["wind_onshore", "wind_offshore", "demand", "price_apx", "price_n2ex"]
 
@@ -21,13 +28,18 @@ alt.data_transformers.disable_max_rows()
 
 
 @st.cache_data
-def load(name):
+def load_parquet(name, version):
+    # `version` is only part of the cache key: new artefacts from the daily run get a new version,
+    # so the app shows them without waiting for a restart.
     return duckdb.sql(f"SELECT * FROM '{(ART_DIR / name).as_posix()}.parquet'").df()
 
 
-@st.cache_data
 def load_meta():
     return json.loads((ART_DIR / "meta.json").read_text())
+
+
+def load(name):
+    return load_parquet(name, meta["generated_at"])
 
 
 st.set_page_config(page_title="GB power: data quality and forecasts", layout="wide")
@@ -97,6 +109,7 @@ with tab_fc:
     week = recent[(recent["start_time"] >= pd.Timestamp(first_day, tz="UTC"))
                   & (recent["start_time"] < pd.Timestamp(first_day, tz="UTC") + pd.Timedelta(days=7))]
     actual = week.drop_duplicates("start_time")[["start_time", "actual"]].rename(columns={"actual": "mw"})
+    shown = ["Actual"] + [MODEL_LABELS[m] for m in MODEL_LABELS if m in chosen]
     lines = pd.concat([
         actual.assign(series="Actual"),
         week[week["model"].isin(chosen)].assign(series=lambda d: d["model"].map(MODEL_LABELS))
@@ -106,8 +119,7 @@ with tab_fc:
         x=alt.X("start_time:T", title=None),
         y=alt.Y("mw:Q", title="MW"),
         color=alt.Color("series:N", title=None, legend=alt.Legend(orient="bottom"),
-                        scale=alt.Scale(domain=["Actual"] + [MODEL_LABELS[m] for m in chosen],
-                                        range=["#222222", "#9e9e9e", "#1f77b4", "#ff7f0e"][: len(chosen) + 1])),
+                        scale=alt.Scale(domain=shown, range=[SERIES_COLORS[s] for s in shown])),
         tooltip=[alt.Tooltip("start_time:T", format="%d %b %H:%M"), "series:N", alt.Tooltip("mw:Q", format=",.0f")],
     ).properties(height=360)
     st.altair_chart(chart, width="stretch")
@@ -119,7 +131,8 @@ with tab_fc:
         xOffset=alt.XOffset("model:N", sort=list(MODEL_LABELS.values())),
         y=alt.Y("mae:Q", title="MAE (MW)"),
         color=alt.Color("model:N", title=None, sort=list(MODEL_LABELS.values()), legend=alt.Legend(orient="bottom"),
-                        scale=alt.Scale(range=["#9e9e9e", "#1f77b4", "#ff7f0e"])),
+                        scale=alt.Scale(domain=list(MODEL_LABELS.values()),
+                                        range=[SERIES_COLORS[m] for m in MODEL_LABELS.values()])),
         tooltip=["fold:N", "model:N", alt.Tooltip("mae:Q", format=",.0f"), "n:Q"],
     ).properties(height=320)
     st.altair_chart(bars, width="stretch")
@@ -158,8 +171,11 @@ with tab_q:
         tooltip=[alt.Tooltip("day:T", format="%d %b %Y"), "series:N", "present:Q", "expected:Q"],
     ).properties(height=200)
     st.altair_chart(heat, width="stretch")
+    weather = card[~card["series"].isin(ELEXON_SERIES)]
+    weather_note = ("All weather series are complete and are not shown." if (weather["missing"] == 0).all()
+                    else f"{int((weather['missing'] > 0).sum())} weather series have gaps; see the scorecard above.")
     st.caption("Each day should have 48 settlement periods: 46 on the spring clock-change day and 50 in autumn. "
-               "All weather series are complete and are not shown.")
+               + weather_note)
 
 with tab_p:
     st.warning("Research test, not a trading strategy. The day-ahead auction already prices public wind forecasts, "

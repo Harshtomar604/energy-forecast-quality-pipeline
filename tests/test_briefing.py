@@ -70,3 +70,12 @@ def test_short_reply_is_rejected():
     from briefing import problems
     issues, _, _ = problems("Wind averaged 6,692 MW.", _facts())
     assert any("too short" in i for i in issues)
+
+
+def test_template_handles_missing_facts():
+    from briefing import template_briefing, validate
+    facts = {**_facts(), "wind_mean_mw": None, "wind_min_mw": None, "wind_max_mw": None,
+             "price_mean_gbp_mwh": None, "demand_forecast_mae_mw": None, "demand_baseline_mae_mw": None}
+    text = template_briefing(facts)
+    assert "n/a MW" in text and "None" not in text
+    assert validate(text, facts)[1] == []
